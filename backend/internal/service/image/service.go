@@ -20,16 +20,21 @@ type producer interface {
 	Enqueue(ctx context.Context, task model.Task) error
 }
 
+type imgProcessor interface {
+	Process(ctx context.Context, task model.Task) error
+}
+
 // Service provides business logic for image operations.
 // It saves uploaded images to storage and publishes processing tasks to a queue.
 type Service struct {
-	fileStorage fileStorage
-	producer    producer
+	fileStorage  fileStorage
+	producer     producer
+	imgProcessor imgProcessor
 }
 
 // NewService creates a new Service with the given storage and producer.
-func NewService(fs fileStorage, p producer) *Service {
-	return &Service{fileStorage: fs, producer: p}
+func NewService(fs fileStorage, p producer, imgP imgProcessor) *Service {
+	return &Service{fileStorage: fs, producer: p, imgProcessor: imgP}
 }
 
 // SaveImage saves the uploaded file to storage and enqueues background processing tasks.
@@ -55,4 +60,13 @@ func (s *Service) SaveImage(ctx context.Context, subdir, filename string, file i
 	}
 
 	return dst, nil
+}
+
+func (s *Service) ProcessTask(ctx context.Context, task model.Task) error {
+	err := s.imgProcessor.Process(ctx, task)
+	if err != nil {
+		return fmt.Errorf("process: failed to process task: %w", err)
+	}
+
+	return nil
 }
