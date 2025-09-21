@@ -32,13 +32,13 @@ func NewHandler(s service) *Handler {
 // enqueues background processing tasks, and responds with the saved file info.
 func (h *Handler) UploadFile(c *ginext.Context) {
 	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
-		respond.Fail(c.Writer, http.StatusBadRequest, fmt.Errorf("parse multipart form failed: %v", err))
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("parse multipart form failed: %v", err))
 	}
 
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
 		zlog.Logger.Err(err).Msg("failed to upload the file")
-		respond.Fail(c.Writer, http.StatusBadRequest, fmt.Errorf("failed to retrieve the file"))
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("failed to retrieve the file"))
 		return
 	}
 	defer file.Close()
@@ -50,14 +50,14 @@ func (h *Handler) UploadFile(c *ginext.Context) {
 	dst, err := h.service.SaveImage("original", header.Filename, file)
 	if err != nil {
 		zlog.Logger.Err(err).Msg("failed to save the image")
-		respond.Fail(c.Writer, http.StatusInternalServerError, fmt.Errorf("failed to save the image: %v", err))
+		respond.Fail(c, http.StatusInternalServerError, fmt.Errorf("failed to save the image: %v", err))
 		return
 	}
 
 	zlog.Logger.Printf("saved file: %v", dst)
 
 	// Respond with file info.
-	respond.OK(c.Writer, map[string]string{
+	respond.OK(c, map[string]string{
 		"filename": header.Filename,
 		"path":     dst,
 	})
