@@ -1,6 +1,7 @@
 package image
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,11 +10,12 @@ import (
 	"github.com/wb-go/wbf/zlog"
 
 	"github.com/aliskhannn/image-processor/internal/api/respond"
+	"github.com/aliskhannn/image-processor/internal/model"
 )
 
 // service defines the interface for image-related operations.
 type service interface {
-	SaveImage(subdir, filename string, file io.Reader) (string, error)
+	SaveImage(ctx context.Context, subdir, filename string, file io.Reader, actions []model.Action) (string, error)
 }
 
 // Handler provides HTTP handlers for image-related endpoints.
@@ -47,7 +49,16 @@ func (h *Handler) UploadFile(c *ginext.Context) {
 	zlog.Logger.Printf("file size: %v", header.Size)
 	zlog.Logger.Printf("MIME header: %v", header.Header)
 
-	dst, err := h.service.SaveImage("original", header.Filename, file)
+	// Parse actions JSON from a form field "actions"
+	// Example: [{"name":"resize","params":{"width":"800","height":"600"}},{"name":"watermark","params":{"text":"My watermark"}}]
+	var actions []model.Action
+	if err := c.ShouldBindJSON(&actions); err != nil {
+		zlog.Logger.Err(err).Msg("failed to bind the actions")
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("failed to bind the actions"))
+		return
+	}
+
+	dst, err := h.service.SaveImage(c.Request.Context(), "original", header.Filename, file, actions)
 	if err != nil {
 		zlog.Logger.Err(err).Msg("failed to save the image")
 		respond.Fail(c, http.StatusInternalServerError, fmt.Errorf("failed to save the image: %v", err))
