@@ -67,13 +67,13 @@ func NewQueue(
 
 // Enqueue serializes the Task to JSON and sends it to Kafka using the producer.
 // The Task ID is used as the message key for partitioning and ordering.
-func (q *Queue) Enqueue(ctx context.Context, task model.Task) error {
-	data, err := json.Marshal(task)
+func (q *Queue) Enqueue(ctx context.Context, img model.Image) error {
+	data, err := json.Marshal(img)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task: %v", err)
 	}
 
-	key := []byte(task.ID.String())
+	key := []byte(img.ID.String())
 
 	if err = q.Producer.SendWithRetry(ctx, q.strategy, key, data); err != nil {
 		return fmt.Errorf("failed to send task: %v", err)

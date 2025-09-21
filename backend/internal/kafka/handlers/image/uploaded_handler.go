@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 
 	"github.com/aliskhannn/image-processor/internal/model"
 )
 
 type service interface {
-	ProcessTask(ctx context.Context, task model.Task) error
+	ProcessImage(ctx context.Context, img model.Image) (uuid.UUID, error)
 }
 
 type UploadedHandler struct {
@@ -23,12 +24,12 @@ func NewUploadedHandler(s service) *UploadedHandler {
 }
 
 func (h *UploadedHandler) Handle(ctx context.Context, msg kafka.Message) error {
-	var task model.Task
-	if err := json.Unmarshal(msg.Value, &task); err != nil {
+	var img model.Image
+	if err := json.Unmarshal(msg.Value, &img); err != nil {
 		return fmt.Errorf("unmarshal task: %w", err)
 	}
 
-	err := h.service.ProcessTask(ctx, task)
+	_, err := h.service.ProcessImage(ctx, img)
 	if err != nil {
 		return fmt.Errorf("process task: %w", err)
 	}
