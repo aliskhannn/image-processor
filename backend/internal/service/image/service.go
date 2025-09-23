@@ -13,8 +13,8 @@ import (
 // fileStorage defines the interface for storing files (e.g., local filesystem or S3).
 type fileStorage interface {
 	Save(ctx context.Context, subdir, filename string, src io.Reader) (string, error)
-	Load(ctx context.Context, subdir, filename string) (io.ReadCloser, error)
-	Delete(ctx context.Context, subdir, filename string) error
+	Load(ctx context.Context, path string) (io.ReadCloser, error)
+	Delete(ctx context.Context, path string) error
 }
 
 // producer defines the interface for enqueueing tasks into a message broker (e.g., Kafka).
@@ -88,13 +88,13 @@ func (s *Service) SaveImage(ctx context.Context, subdir, filename string, file i
 	return id, dst, nil
 }
 
-func (s *Service) GetImage(ctx context.Context, id uuid.UUID, subdir, filename string) (model.Image, io.ReadCloser, error) {
+func (s *Service) GetImage(ctx context.Context, id uuid.UUID) (model.Image, io.ReadCloser, error) {
 	img, err := s.repository.GetImage(ctx, id)
 	if err != nil {
 		return model.Image{}, nil, fmt.Errorf("get image: failed to get image: %w", err)
 	}
 
-	srcReader, err := s.fileStorage.Load(ctx, subdir, filename)
+	srcReader, err := s.fileStorage.Load(ctx, img.Path)
 	if err != nil {
 		return model.Image{}, nil, fmt.Errorf("get image: failed to load file: %w", err)
 	}
@@ -102,13 +102,18 @@ func (s *Service) GetImage(ctx context.Context, id uuid.UUID, subdir, filename s
 	return img, srcReader, nil
 }
 
-func (s *Service) DeleteImage(ctx context.Context, id uuid.UUID, subdir, filename string) error {
-	err := s.repository.DeleteImage(ctx, id)
+func (s *Service) DeleteImage(ctx context.Context, id uuid.UUID) error {
+	img, err := s.repository.GetImage(ctx, id)
+	if err != nil {
+		return fmt.Errorf("get image: failed to get image: %w", err)
+	}
+
+	err = s.repository.DeleteImage(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete image: failed to delete image from db: %w", err)
 	}
 
-	err = s.fileStorage.Delete(ctx, subdir, filename)
+	err = s.fileStorage.Delete(ctx, img.Path)
 	if err != nil {
 		return fmt.Errorf("delete image: failed to delete image from storage: %w", err)
 	}

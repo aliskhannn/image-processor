@@ -1,6 +1,7 @@
 package respond
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/wb-go/wbf/ginext"
@@ -16,11 +17,10 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-// JPEG sends a JPEG image as the HTTP response with the specified status code.
-// It sets the Content-Type header to "image/jpeg" and writes the image bytes
-// directly using the Gin context.
-func JPEG(c *ginext.Context, status int, data []byte) {
-	c.Data(status, "image/jpeg", data)
+// JPEG streams a JPEG image directly from an io.Reader as the HTTP response.
+// It sets the Content-Type header to "image/jpeg".
+func JPEG(c *ginext.Context, status int, reader io.Reader) {
+	c.DataFromReader(status, -1, "image/jpeg", reader, nil)
 }
 
 // JSON sends a JSON response with the specified HTTP status code and data.

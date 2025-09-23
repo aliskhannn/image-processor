@@ -18,7 +18,7 @@ import (
 // It allows saving and loading files from a backend (e.g., local FS, S3, MinIO).
 type fileStorage interface {
 	Save(ctx context.Context, subdir, filename string, src io.Reader) (string, error)
-	Load(ctx context.Context, subdir, filename string) (io.ReadCloser, error)
+	Load(ctx context.Context, path string) (io.ReadCloser, error)
 }
 
 // Processor is responsible for executing image processing tasks
@@ -61,7 +61,7 @@ func (p *Processor) resize(ctx context.Context, img model.Image) (model.Image, e
 	}
 
 	// Load the original image from storage.
-	srcReader, err := p.fileStorage.Load(ctx, "original", img.Filename)
+	srcReader, err := p.fileStorage.Load(ctx, img.Path)
 	if err != nil {
 		return model.Image{}, fmt.Errorf("failed to load original image: %w", err)
 	}
@@ -111,7 +111,7 @@ func (p *Processor) thumbnail(ctx context.Context, img model.Image) (model.Image
 	}
 
 	// Load the original image.
-	srcReader, err := p.fileStorage.Load(ctx, "original", img.Filename)
+	srcReader, err := p.fileStorage.Load(ctx, img.Path)
 	if err != nil {
 		return model.Image{}, fmt.Errorf("failed to load original image: %w", err)
 	}
@@ -158,7 +158,7 @@ func (p *Processor) watermark(ctx context.Context, img model.Image) (model.Image
 	}
 
 	// Load the original image.
-	srcReader, err := p.fileStorage.Load(ctx, "original", img.Filename)
+	srcReader, err := p.fileStorage.Load(ctx, img.Path)
 	if err != nil {
 		return model.Image{}, fmt.Errorf("failed to load original image: %w", err)
 	}

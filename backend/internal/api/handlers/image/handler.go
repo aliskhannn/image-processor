@@ -18,8 +18,8 @@ import (
 // service defines the interface for image-related operations.
 type service interface {
 	SaveImage(ctx context.Context, subdir, filename string, file io.Reader, action model.Action) (uuid.UUID, string, error)
-	GetImage(ctx context.Context, id uuid.UUID, subdir, filename string) (model.Image, io.ReadCloser, error)
-	DeleteImage(ctx context.Context, id uuid.UUID, subdir, filename string) error
+	GetImage(ctx context.Context, id uuid.UUID) (model.Image, io.ReadCloser, error)
+	DeleteImage(ctx context.Context, id uuid.UUID) error
 }
 
 // Handler provides HTTP handlers for image-related endpoints.
@@ -93,4 +93,51 @@ func (h *Handler) UploadFile(c *ginext.Context) {
 		"filename": header.Filename,
 		"path":     dst,
 	})
+}
+
+func (h *Handler) Get(c *ginext.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		zlog.Logger.Warn().Msg("missing id")
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("missing id"))
+		return
+	}
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		zlog.Logger.Err(err).Msg("failed to parse id")
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("invalid id: %v", err))
+		return
+	}
+
+	_, reader, err := h.service.GetImage(c.Request.Context(), id)
+	if err != nil {
+		zlog.Logger.Err(err).Msg("failed to get image")
+		respond.Fail(c, http.StatusInternalServerError, fmt.Errorf("failed to get image: %v", err))
+		return
+	}
+	defer reader.Close()
+
+	respond.JPEG(c, http.StatusOK, reader)
+}
+
+func (h *Handler) Delete(c *ginext.Context) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("missing id"))
+		return
+	}
+
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("invalid id: %v", err))
+		return
+	}
+
+	if err := h.service.DeleteImage(c.Request.Context(), id); err != nil {
+		respond.Fail(c, http.StatusInternalServerError, fmt.Errorf("failed to delete image: %w", err))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }

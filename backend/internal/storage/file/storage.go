@@ -61,10 +61,8 @@ func (s *Storage) Save(ctx context.Context, subdir, filename string, src io.Read
 }
 
 // Load retrieves the file from the specified subdirectory in the bucket and returns a reader.
-func (s *Storage) Load(ctx context.Context, subdir, filename string) (io.ReadCloser, error) {
-	objectName := filepath.Join(subdir, filename)
-
-	obj, err := s.client.GetObject(ctx, s.bucketName, objectName, minio.GetObjectOptions{})
+func (s *Storage) Load(ctx context.Context, path string) (io.ReadCloser, error) {
+	obj, err := s.client.GetObject(ctx, s.bucketName, path, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to load file: %w", err)
 	}
@@ -73,8 +71,6 @@ func (s *Storage) Load(ctx context.Context, subdir, filename string) (io.ReadClo
 }
 
 // Delete removes the specified file from the bucket.
-func (s *Storage) Delete(ctx context.Context, subdir, filename string) error {
-	objectName := filepath.Join(subdir, filename)
-
-	return s.client.RemoveObject(ctx, s.bucketName, objectName, minio.RemoveObjectOptions{})
+func (s *Storage) Delete(ctx context.Context, path string) error {
+	return s.client.RemoveObject(ctx, s.bucketName, path, minio.RemoveObjectOptions{})
 }

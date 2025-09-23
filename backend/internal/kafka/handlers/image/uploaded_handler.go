@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
+	"github.com/wb-go/wbf/zlog"
 
 	"github.com/aliskhannn/image-processor/internal/model"
 )
@@ -29,10 +30,12 @@ func (h *UploadedHandler) Handle(ctx context.Context, msg kafka.Message) error {
 		return fmt.Errorf("unmarshal task: %w", err)
 	}
 
-	_, err := h.service.ProcessImage(ctx, img)
+	id, err := h.service.ProcessImage(ctx, img)
 	if err != nil {
 		return fmt.Errorf("process task: %w", err)
 	}
+
+	zlog.Logger.Printf("image processed: %s", id)
 
 	return nil
 }
