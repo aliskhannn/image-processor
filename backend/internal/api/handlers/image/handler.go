@@ -39,10 +39,10 @@ type UploadRequest struct {
 	Params map[string]string `json:"params"`
 }
 
-// UploadFile handles the HTTP request for uploading an image.
+// Upload handles the HTTP request for uploading an image.
 // It reads the multipart form, saves the uploaded file via the service,
 // enqueues background processing tasks, and responds with the saved file info.
-func (h *Handler) UploadFile(c *ginext.Context) {
+func (h *Handler) Upload(c *ginext.Context) {
 	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
 		respond.Fail(c, http.StatusBadRequest, fmt.Errorf("parse multipart form failed: %v", err))
 	}
