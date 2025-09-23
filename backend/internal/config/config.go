@@ -11,10 +11,11 @@ import (
 
 // Config holds the main configuration for the application.
 type Config struct {
-	Server  Server  `mapstructure:"server"`
-	Storage Storage `mapstructure:"storage"`
-	Kafka   Kafka   `mapstructure:"kafka"`
-	Retry   Retry   `mapstructure:"retry"`
+	Server   Server   `mapstructure:"server"`
+	Database Database `mapstructure:"database"`
+	Storage  Storage  `mapstructure:"storage"`
+	Kafka    Kafka    `mapstructure:"kafka"`
+	Retry    Retry    `mapstructure:"retry"`
 }
 
 // Server holds HTTP server-related configuration.
@@ -44,7 +45,11 @@ type DatabaseNode struct {
 
 // Storage holds configuration for the file storage backend.
 type Storage struct {
-	BaseDir string `mapstructure:"base_dir"` // Base directory for storing files
+	Endpoint   string `mapstructure:"endpoint"`
+	AccessKey  string `mapstructure:"access_key"`
+	SecretKey  string `mapstructure:"secret_key"`
+	BucketName string `mapstructure:"bucket_name"`
+	UseSSL     bool   `mapstructure:"use_ssl"`
 }
 
 // Kafka holds configuration for the Kafka message queue.
@@ -97,7 +102,7 @@ func MustLoad(path string) *Config {
 		zlog.Logger.Panic().Err(err).Msg("failed to load config")
 	}
 
-	mustBindEnv(
+	mustBindEnv()
 
 	var cfg Config
 	if err := c.Unmarshal(&cfg); err != nil {

@@ -19,7 +19,7 @@ type fileStorage interface {
 
 // producer defines the interface for enqueueing tasks into a message broker (e.g., Kafka).
 type producer interface {
-	Enqueue(ctx context.Context, task model.Image) error
+	Produce(ctx context.Context, img model.Image) error
 }
 
 type imgProcessor interface {
@@ -80,8 +80,8 @@ func (s *Service) SaveImage(ctx context.Context, subdir, filename string, file i
 
 	img.ID = id
 
-	// Enqueue the task for asynchronous processing.
-	if err := s.producer.Enqueue(ctx, img); err != nil {
+	// Produce the task for asynchronous processing.
+	if err := s.producer.Produce(ctx, img); err != nil {
 		return uuid.Nil, "", fmt.Errorf("save image: failed to enqueue task: %w", err)
 	}
 
