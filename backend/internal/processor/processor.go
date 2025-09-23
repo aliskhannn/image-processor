@@ -14,6 +14,8 @@ import (
 	"github.com/aliskhannn/image-processor/internal/model"
 )
 
+const defaultFontPath = "internal/assets/fonts/DejaVuSans.ttf"
+
 // fileStorage defines the interface for file storage.
 // It allows saving and loading files from a backend (e.g., local FS, S3, MinIO).
 type fileStorage interface {
@@ -88,13 +90,10 @@ func (p *Processor) resize(ctx context.Context, img model.Image) (model.Image, e
 		return model.Image{}, fmt.Errorf("failed to save resized image: %w", err)
 	}
 
-	return model.Image{
-		Filename:   img.Filename,
-		Path:       dst,
-		Action:     img.Action,
-		OriginalID: &img.ID,
-		Status:     "processed",
-	}, nil
+	img.Path = dst
+	img.Status = "processed"
+
+	return img, nil
 }
 
 // thumbnail generates a small thumbnail of the image.
@@ -138,13 +137,10 @@ func (p *Processor) thumbnail(ctx context.Context, img model.Image) (model.Image
 		return model.Image{}, fmt.Errorf("failed to save thumbnail: %w", err)
 	}
 
-	return model.Image{
-		Filename:   img.Filename,
-		Path:       dst,
-		Action:     img.Action,
-		OriginalID: &img.ID,
-		Status:     "processed",
-	}, nil
+	img.Path = dst
+	img.Status = "processed"
+
+	return img, nil
 }
 
 // watermark adds a watermark text to the image.
@@ -174,14 +170,18 @@ func (p *Processor) watermark(ctx context.Context, img model.Image) (model.Image
 	dc := gg.NewContextForImage(image)
 	dc.SetColor(color.White)
 
-	err = dc.LoadFontFace("sans-serif", 6)
+	fontSize := float64(dc.Width()) * 0.05 // 5% of the image width
+
+	err = dc.LoadFontFace(defaultFontPath, fontSize)
 	if err != nil {
 		return model.Image{}, fmt.Errorf("failed to load font: %w", err)
 	}
 
+	tw, th := dc.MeasureString(text) // calculate font size
+
 	margin := 10.0
-	x := float64(dc.Width()) - margin
-	y := float64(dc.Height()) - margin
+	x := float64(dc.Width()) - tw - margin
+	y := float64(dc.Height()) - th - margin
 
 	dc.DrawStringAnchored(text, x, y, 1, 1) // bottom-right corner
 	dc.Fill()
@@ -198,11 +198,8 @@ func (p *Processor) watermark(ctx context.Context, img model.Image) (model.Image
 		return model.Image{}, fmt.Errorf("failed to save watermarked image: %w", err)
 	}
 
-	return model.Image{
-		Filename:   img.Filename,
-		Path:       dst,
-		Action:     img.Action,
-		OriginalID: &img.ID,
-		Status:     "processed",
-	}, nil
+	img.Path = dst
+	img.Status = "processed"
+
+	return img, nil
 }

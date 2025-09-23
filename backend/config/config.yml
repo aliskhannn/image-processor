@@ -17,11 +17,11 @@ database:
   conn_max_lifetime: 30m
 
 storage:
-  endpoint: "play.min.io"
+  endpoint: "minio:9000"
   access_key: "minioadmin"
   secret_key: "minioadmin"
   bucket_name: "image-bucket"
-  use_ssl: true
+  use_ssl: false
 
 kafka:
   group_id: "image-workers"

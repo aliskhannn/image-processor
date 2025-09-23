@@ -16,9 +16,10 @@ func Setup(h *image.Handler) *ginext.Engine {
 
 	api := r.Group("/api")
 
-	api.POST("/upload", h.Upload)      // uploading image
-	api.GET("/image/:id", h.Get)       // getting image by id
-	api.DELETE("/image/:id", h.Delete) // deleting image by id
+	api.POST("/upload", h.Upload)         // uploading image
+	api.GET("/image/:id", h.Get)          // getting image by id
+	api.GET("/image/:id/meta", h.GetMeta) // getting image by id
+	api.DELETE("/image/:id", h.Delete)    // deleting image by id
 
 	return r
 }

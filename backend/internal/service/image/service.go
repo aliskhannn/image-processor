@@ -22,13 +22,16 @@ type producer interface {
 	Produce(ctx context.Context, img model.Image) error
 }
 
+// imgProcessor defines the interface for processing images (resize, watermark, etc.).
 type imgProcessor interface {
 	Process(ctx context.Context, img model.Image) (model.Image, error)
 }
 
+// repository defines the interface for image CRUD operations in the database.
 type repository interface {
 	SaveImage(ctx context.Context, img model.Image) (uuid.UUID, error)
 	GetImage(ctx context.Context, id uuid.UUID) (model.Image, error)
+	UpdateImage(ctx context.Context, id uuid.UUID, path, status string) error
 	DeleteImage(ctx context.Context, id uuid.UUID) error
 }
 
@@ -88,6 +91,7 @@ func (s *Service) SaveImage(ctx context.Context, subdir, filename string, file i
 	return id, dst, nil
 }
 
+// GetImage retrieves the image metadata and file content from storage.
 func (s *Service) GetImage(ctx context.Context, id uuid.UUID) (model.Image, io.ReadCloser, error) {
 	img, err := s.repository.GetImage(ctx, id)
 	if err != nil {
@@ -102,17 +106,20 @@ func (s *Service) GetImage(ctx context.Context, id uuid.UUID) (model.Image, io.R
 	return img, srcReader, nil
 }
 
+// DeleteImage deletes the image record from the database and removes the file from storage.
 func (s *Service) DeleteImage(ctx context.Context, id uuid.UUID) error {
 	img, err := s.repository.GetImage(ctx, id)
 	if err != nil {
 		return fmt.Errorf("get image: failed to get image: %w", err)
 	}
 
+	// Delete from database.
 	err = s.repository.DeleteImage(ctx, id)
 	if err != nil {
 		return fmt.Errorf("delete image: failed to delete image from db: %w", err)
 	}
 
+	// Delete from storage.
 	err = s.fileStorage.Delete(ctx, img.Path)
 	if err != nil {
 		return fmt.Errorf("delete image: failed to delete image from storage: %w", err)
@@ -121,16 +128,19 @@ func (s *Service) DeleteImage(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) ProcessImage(ctx context.Context, img model.Image) (uuid.UUID, error) {
-	img, err := s.imgProcessor.Process(ctx, img)
+// ProcessImage performs the specified image action (resize, watermark, etc.) and updates the database record.
+func (s *Service) ProcessImage(ctx context.Context, image model.Image) (uuid.UUID, error) {
+	// Process the image (resize, watermark, etc.).
+	img, err := s.imgProcessor.Process(ctx, image)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("process image: failed to process task: %w", err)
 	}
 
-	id, err := s.repository.SaveImage(ctx, img)
+	// Update database with new path and status.
+	err = s.repository.UpdateImage(ctx, img.ID, img.Path, img.Status)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("process image: failed to save image to db: %w", err)
+		return uuid.Nil, fmt.Errorf("update image: failed to update image: %w", err)
 	}
 
-	return id, nil
+	return img.ID, nil
 }

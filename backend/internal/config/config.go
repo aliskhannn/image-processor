@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-	"github.com/wb-go/wbf/config"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -96,17 +95,20 @@ func mustBindEnv() {
 // MustLoad loads the configuration from the specified file path.
 // It panics if the configuration file cannot be loaded or unmarshaled.
 func MustLoad(path string) *Config {
-	c := config.New()
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./config")
+	viper.AutomaticEnv()
 
-	if err := c.Load(path); err != nil {
-		zlog.Logger.Panic().Err(err).Msg("failed to load config")
+	if err := viper.ReadInConfig(); err != nil {
+		zlog.Logger.Panic().Err(err).Msg("failed to read config")
 	}
 
 	mustBindEnv()
 
 	var cfg Config
-	if err := c.Unmarshal(&cfg); err != nil {
-		zlog.Logger.Panic().Err(err).Msg("failed to unmarshal config")
+	if err := viper.Unmarshal(&cfg); err != nil {
+		zlog.Logger.Panic().Err(err).Msgf("failed to unmarshal config: %v", err)
 	}
 
 	return &cfg
