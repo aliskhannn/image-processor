@@ -39,7 +39,7 @@ func (r *Repository) SaveImage(ctx context.Context, img model.Image) (uuid.UUID,
 	}
 
 	var id uuid.UUID
-	err = r.db.Master.QueryRowContext(
+	err = r.db.QueryRowContext(
 		ctx, query, img.Filename, img.Path, img.Action.Name, paramsJSON, img.Status,
 	).Scan(&id)
 	if err != nil {
@@ -60,7 +60,7 @@ func (r *Repository) GetImage(ctx context.Context, id uuid.UUID) (model.Image, e
 	var img model.Image
 	var paramsBytes []byte
 
-	err := r.db.Master.QueryRowContext(
+	err := r.db.QueryRowContext(
 		ctx, query, id,
 	).Scan(&img.Filename, &img.Path, &img.Action.Name, &paramsBytes, &img.Status, &img.CreatedAt)
 	if err != nil {

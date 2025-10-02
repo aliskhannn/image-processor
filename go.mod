@@ -9,7 +9,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.95
 	github.com/segmentio/kafka-go v0.4.37
 	github.com/spf13/viper v1.18.2
-	github.com/wb-go/wbf v0.0.4
+	github.com/wb-go/wbf v0.0.5
 )
 
 require (

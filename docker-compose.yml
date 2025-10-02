@@ -1,8 +1,8 @@
 services:
   frontend:
     build:
-      context: ./frontend
-    container_name: processor_ui
+      context: ./website
+    container_name: processor-ui
     ports:
       - "3000:80"   # http://localhost:3000
     environment:
@@ -13,7 +13,7 @@ services:
       - app-network
 
   image-processor:
-    build: ./backend
+    build: ./
     command: ./image-processor
     container_name: processor
     ports:
@@ -59,7 +59,7 @@ services:
       timeout: 3s
       retries: 1
     volumes:
-      - ./backend/migrations:/migrations
+      - ./migrations:/migrations
     networks:
       - app-network
 

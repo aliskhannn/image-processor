@@ -143,6 +143,8 @@ github.com/ugorji/go/codec v1.2.11 h1:BMaWp1Bb6fHwEtbplGBGJ498wD+LKlNSl25MjdZY4d
 github.com/ugorji/go/codec v1.2.11/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZgYf6w6lg=
 github.com/wb-go/wbf v0.0.4 h1:+7WgjpImAvwabulllEe4FwojEiw5UFAiSaa3XH8ceVQ=
 github.com/wb-go/wbf v0.0.4/go.mod h1:2RXYh44okqUlbYQTzv0Xnmcmq+vxq1SuQRaarX9s1fo=
+github.com/wb-go/wbf v0.0.5 h1:PJnsb1tvXmdx7YKNIr9ocKEOGSPqgy2/n0GskuUHYnI=
+github.com/wb-go/wbf v0.0.5/go.mod h1:2RXYh44okqUlbYQTzv0Xnmcmq+vxq1SuQRaarX9s1fo=
 github.com/xdg/scram v1.0.5 h1:TuS0RFmt5Is5qm9Tm2SoD89OPqe4IRiFtyFY4iwWXsw=
 github.com/xdg/scram v1.0.5/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v1.0.3 h1:cmL5Enob4W83ti/ZHuZLuKD/xqJfus4fVPwE+/BDm+4=
